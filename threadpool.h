@@ -10,12 +10,71 @@
 #include <functional>
 #include <unordered_map>
 
+// Any类型可以接收任意数据类型
+class Any
+{
+public:
+	Any() = default;
+	~Any() = default;
+	
+	// 类成员是个unique_ptr类型，没有左值构造和引用，但是有右值拷贝构造和引用
+	Any(const Any&) = delete;
+	Any& operator=(const Any&) = delete;
+	Any(Any&&) = default;				// 右值拷贝构造和引用  不写也行
+	Any& operator=(Any&&) = default;
+
+	// 这个构造函数可以让Any类型接收任何其他类型的数据
+	template<typename T>
+	Any(T data) : basePtr(std::make_unique<Derive<T>>(data)) {}
+
+	// 将Any对象中存储的data成员提取出来
+	template<typename T>
+	T cast()
+	{
+		// 从base中找出它指向的Derive对象，从中取出data成员
+		// 基类指针要转成派生类指针 RTTI
+		Derive<T>* pd = dynamic_cast<Derive<T>*>(base.get());
+		if (pd == nullptr)
+		{
+			throw "type mismatch!";
+
+		}
+		return pd->data;
+	}
+
+private:
+	// 基类类型
+	class Base
+	{
+	public:
+		/*
+		* 在继承结构中，一个基类对应的派生类对象如果是在堆上创建的，
+		* delete基类指针时，派生类的析构函数就无法执行了
+		*/
+		virtual ~Base() = default;
+	};
+
+	// 派生类
+	template<typename T>
+	class Derive :public Base
+	{
+	public:
+		Derive(T anyData) : data(anyData) {}
+		T data;				// 保存任意类型的数据
+	};
+
+
+private:
+	// 定义一个基类的指针
+	std::unique_ptr<Base> basePtr;
+};
+
 // 任务抽象基类
 class Task
 {
 public:
 	//用户可以自定义任意任务类型，从Task继承，重写run方法，实现自定义任务处理
-	virtual void runTask() = 0;
+	virtual Any runTask() = 0;
 };
 
 
