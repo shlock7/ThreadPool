@@ -124,22 +124,19 @@ void ThreadPool::startThreadPool(int initSize)
 */
 void ThreadPool::threadFunc()
 {
-	/*std::cout << "begin threadFunc tid:" 
-				<< std::this_thread::get_id()
-				<< std::endl;
-
-	std::cout << "end threadFunc tid:" 
-				<< std::this_thread::get_id()
-				<< std::endl;*/
 
 	while (true)
 	{
 		// 获取锁
 		std::unique_lock<std::mutex> lock(taskQueMtx);
 
+		std::cout << "tid: " << std::this_thread::get_id() << " Try to get task...\n";
+
 		// 等待notEmpty条件，即条件队列非空才能执行任务，此时没有任务可以一直等，不用返回
 		notEmpty.wait(lock, [&]()->bool {return taskQue.size() > 0; });
 		
+		std::cout << "tid: " << std::this_thread::get_id() << " Get task success!\n";
+
 		// 从任务队列中取一个任务
 		auto task = taskQue.front();
 		taskQue.pop();
