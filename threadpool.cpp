@@ -72,7 +72,10 @@ void ThreadPool::startThreadPool(int initSize)
 	// 创建线程对象
 	for (int i = 0; i < initThreadSize; i++)
 	{
-		threads.emplace_back(new Thread(std::bind(&ThreadPool::threadFunc, this)));
+		// 创建线程对象的时候将线程函数传递给Thread对象
+		// std::unique_ptr<Thread> ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this));
+		auto ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc, this));
+		threads.emplace_back(std::move(ptr)); // unique_ptr不允许拷贝构造
 	}
 
 	// 启动线程对象

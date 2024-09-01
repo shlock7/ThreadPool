@@ -68,7 +68,9 @@ private:
 private:
 	PoolMode poolMode;							// 当前线程池的工作模式
 
-	std::vector<Thread*> threads;				// 线程列表
+	//std::vector< Thread*> threads;				// 线程列表
+	// 使用unique_ptr代替裸指针，vector析构的时候析构里面的Thread对象
+	std::vector<std::unique_ptr<Thread>> threads;
 	size_t initThreadSize;						// 初始线程数量
 
 	std::queue<std::shared_ptr<Task>> taskQue;  // 任务队列
